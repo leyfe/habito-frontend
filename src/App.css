@@ -1,0 +1,46 @@
+/* Minimal global polish for mobile-first look */
+:root {
+  --bg: hsl(0 0% 100%);
+  --text: hsl(222.2 84% 4.9%);
+}
+.dark {
+  --bg: hsl(222.2 84% 4.9%);
+  --text: hsl(210 40% 98%);
+}
+
+#root { min-height: 100vh; }
+
+::selection {
+  background: rgba(99, 102, 241, 0.25);
+}
+
+/* --- Fix für scrollende fixed-Elemente auf Mobile --- */
+html,
+body {
+  height: 100%;
+  overflow-x: hidden;
+  -webkit-overflow-scrolling: touch;
+}
+
+/* verhindert, dass fixed-Elemente bei iOS Safari mitscrollen */
+body {
+  position: relative;
+  overscroll-behavior: none;
+  touch-action: pan-y;
+  background-color: var(--nextui-background);
+}
+
+/* Safari-Fix für sticky/fixed Elemente mit backdrop-blur */
+.fixed,
+.sticky {
+  -webkit-transform: translateZ(0);
+  transform: translateZ(0);
+  will-change: transform;
+}
+
+/* verhindert Layout-Sprung bei Safari Bounce-Effekt */
+#root {
+  min-height: 100vh;
+  position: relative;
+  overflow-x: hidden;
+}
