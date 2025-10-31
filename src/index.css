@@ -3,7 +3,7 @@
 @tailwind utilities;
 html,
 body {
-  background-color: #0f172a;
+  background-color:transparent;
 }
 
 body {
@@ -11,4 +11,17 @@ body {
   margin: 0;
   padding-top: env(safe-area-inset-top);
   padding-bottom: env(safe-area-inset-bottom);
+}
+
+
+@keyframes shake {
+  0% { transform: translate(0, 0) rotate(0deg); }
+  20% { transform: translate(-2px, 2px) rotate(-1deg); }
+  40% { transform: translate(2px, -2px) rotate(1deg); }
+  60% { transform: translate(-1px, 2px) rotate(0deg); }
+  80% { transform: translate(1px, -1px) rotate(1deg); }
+  100% { transform: translate(0, 0) rotate(0deg); }
+}
+.animate-shake {
+  animation: shake 0.3s ease-in-out;
 }

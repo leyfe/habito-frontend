@@ -2,8 +2,8 @@ import React, { useEffect, useMemo, useState } from "react";
 import { Button, Card, CardBody } from "@nextui-org/react";
 import { useNavigate } from "react-router-dom";
 import { ArrowLeft } from "lucide-react";
-
-import { HeaderBar, api, toISO, addDays } from "./components";
+import HeaderBar from "../components/layout/HeaderBar";
+import { addDays, toISO, api } from "../components";
 
 
 export default function StatsPage() {

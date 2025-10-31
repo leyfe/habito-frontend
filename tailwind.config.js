@@ -9,9 +9,15 @@ module.exports = {
     "./node_modules/@nextui-org/theme/dist/**/*.{js,jsx,ts,tsx}",
   ],
   safelist: [
-  { pattern: /bg-(blue|violet|pink|orange|green|teal|yellow|rose|slate|cyan|lime|purple)-(100|200|300|400|500|600|700|800)/ },
-  { pattern: /from-(blue|violet|pink|orange|green|teal|yellow|rose|slate|cyan|lime|purple)-(100|200|300|400|500|600|700|800)/ },
-  { pattern: /to-(blue|violet|pink|orange|green|teal|yellow|rose|slate|cyan|lime|purple)-(100|200|300|400|500|600|700|800)/ },
+    // 🎨 dynamische Farbverwendung (Buttons, Gruppen, Balken)
+    {
+      pattern:
+        /((hover|focus):)?(bg|text|border|ring|shadow|fill|stroke|from|via|to)-(blue|violet|pink|orange|green|teal|yellow|rose|slate|cyan|lime|purple)-(100|200|300|400|500|600|700|800)/,
+    },
+    // 🌙 Transparente oder helle Varianten für Gradients o. Ä.
+    { pattern: /bg-(blue|violet|pink|orange|green|teal|yellow|rose|slate|cyan|lime|purple)-(50|100|200|300|400|500|600|700|800)/ },
+    { pattern: /from-(blue|violet|pink|orange|green|teal|yellow|rose|slate|cyan|lime|purple)-(100|200|300|400|500|600|700|800)/ },
+    { pattern: /to-(blue|violet|pink|orange|green|teal|yellow|rose|slate|cyan|lime|purple)-(100|200|300|400|500|600|700|800)/ },
   ],
   theme: { extend: {} },
   darkMode: "class",

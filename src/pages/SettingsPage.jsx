@@ -9,7 +9,7 @@ import {
   ModalFooter,
   Switch,
 } from "@nextui-org/react";
-import { HeaderBar, api } from "./components";
+import { toISO, api } from "../components";
 import { toast } from "react-hot-toast";
 import {
   Palette,
@@ -78,8 +78,9 @@ const saveGroup = async (payload) => {
           g.id === payload.id ? { ...g, ...payload } : g
         );
       } else {
-        const newGroup = { ...payload, id: newId, sort_order: prev.length + 1 };
-        return [...prev, newGroup];
+        const maxOrder = Math.max(0, ...prev.map((g) => g.sort_order || 0));
+        const newGroup = { ...payload, id: newId, sort_order: maxOrder + 1 };
+        return [...prev, newGroup].sort((a, b) => a.sort_order - b.sort_order);
       }
     });
 
@@ -105,51 +106,60 @@ const saveGroup = async (payload) => {
   // 🔹 DnD sensors
   const sensors = useSensors(useSensor(PointerSensor));
 
-const handleDragEnd = async (event) => {
+    const handleDragEnd = async (event) => {
   const { active, over } = event;
   if (!over || active.id === over.id) return;
 
   const oldIndex = groups.findIndex((g) => g.id === Number(active.id));
   const newIndex = groups.findIndex((g) => g.id === Number(over.id));
 
+  // Neue Reihenfolge lokal berechnen
   const newOrder = arrayMove(groups, oldIndex, newIndex).map((g, i) => ({
     ...g,
     sort_order: i + 1,
   }));
 
-  setGroups(newOrder); // direkt aktualisieren
+  // Direkt anzeigen (optimistic UI)
+  setGroups(newOrder);
 
-  // 🔹 sort_order in DB aktualisieren (nacheinander, damit keine Überschneidung)
-  for (const g of newOrder) {
-    await api(`type=groups&id=${g.id}`, {
+  try {
+    // 🟢 Batch-Request an PHP
+    const res = await api("type=groups", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(g),
+      body: JSON.stringify(
+        newOrder.map((g) => ({ id: g.id, sort_order: g.sort_order }))
+      ),
     });
-  }
 
-  toast.success("Reihenfolge gespeichert");
+    if (!res?.ok) throw new Error("Server-Antwort ungültig");
+
+    toast.success("Reihenfolge gespeichert");
+
+    // 🔄 Sicherheitshalber neu laden
+    await new Promise((r) => setTimeout(r, 200));
+    await loadGroups();
+  } catch (err) {
+    console.error("Fehler beim Speichern der Sortierung:", err);
+    toast.error("Fehler beim Speichern der Reihenfolge");
+  }
 };
 
   return (
     <div className="min-h-screen bg-background text-foreground transition-colors">
-      <HeaderBar
-        left={
-          <div className="flex items-center gap-2">
-            <Button
-              size="lg"
-              variant="light"
-              color="default"
-              radius="full"
-              isIconOnly
-              onPress={() => navigate("/")}
-            >
-              <ArrowLeft size={18} />
-            </Button>
-            <div className="font-semibold">Einstellungen</div>
-          </div>
-        }
-      />
+      <div className="flex items-center gap-2">
+        <Button
+            size="lg"
+            variant="light"
+            color="default"
+            radius="full"
+            isIconOnly
+            onPress={() => navigate("/")}
+        >
+            <ArrowLeft size={18} />
+        </Button>
+        <div className="font-semibold">Einstellungen</div>
+        </div>
 
       <main className="mx-auto max-w-5xl px-4 py-8 space-y-10">
         <h2 className="text-xl font-semibold">Darstellung</h2>
