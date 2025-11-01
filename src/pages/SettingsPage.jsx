@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, useContext } from "react";
 import {
   Button,
   Input,
@@ -20,9 +20,11 @@ import {
   Moon,
   Sun,
   GripVertical,
+  LogOut,
 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { useTheme } from "next-themes";
+import { AuthContext } from "@/context/AuthContext"; // 🔑 hinzugefügt
 
 // 🧩 DnD imports
 import {
@@ -49,6 +51,9 @@ export default function SettingsPage() {
   const [editGroup, setEditGroup] = useState(null);
   const [showModal, setShowModal] = useState(false);
 
+  // 🔐 AuthContext
+  const { logout } = useContext(AuthContext);
+
   useEffect(() => setMounted(true), []);
 
   const loadGroups = async () => {
@@ -60,41 +65,37 @@ export default function SettingsPage() {
     loadGroups();
   }, []);
 
-const saveGroup = async (payload) => {
-  try {
-    const res = await api(`type=groups${payload.id ? `&id=${payload.id}` : ""}`, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(payload),
-    });
+  const saveGroup = async (payload) => {
+    try {
+      const res = await api(`type=groups${payload.id ? `&id=${payload.id}` : ""}`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(payload),
+      });
 
-    const newId = res?.id || payload.id;
+      const newId = res?.id || payload.id;
+      setGroups((prev) => {
+        const existing = prev.find((g) => g.id === payload.id);
+        if (existing) {
+          return prev.map((g) =>
+            g.id === payload.id ? { ...g, ...payload } : g
+          );
+        } else {
+          const maxOrder = Math.max(0, ...prev.map((g) => g.sort_order || 0));
+          const newGroup = { ...payload, id: newId, sort_order: maxOrder + 1 };
+          return [...prev, newGroup].sort((a, b) => a.sort_order - b.sort_order);
+        }
+      });
 
-    // 🟢 Lokalen State aktualisieren
-    setGroups((prev) => {
-      const existing = prev.find((g) => g.id === payload.id);
-      if (existing) {
-        return prev.map((g) =>
-          g.id === payload.id ? { ...g, ...payload } : g
-        );
-      } else {
-        const maxOrder = Math.max(0, ...prev.map((g) => g.sort_order || 0));
-        const newGroup = { ...payload, id: newId, sort_order: maxOrder + 1 };
-        return [...prev, newGroup].sort((a, b) => a.sort_order - b.sort_order);
-      }
-    });
-
-    toast.success(payload.id ? "Gruppe aktualisiert" : "Gruppe erstellt");
-    setShowModal(false);
-    setEditGroup(null);
-
-    // 🟢 Kurze Pause, dann nochmal sauber aus DB laden
-    setTimeout(loadGroups, 250);
-  } catch (err) {
-    console.error(err);
-    toast.error("Fehler beim Speichern");
-  }
-};
+      toast.success(payload.id ? "Gruppe aktualisiert" : "Gruppe erstellt");
+      setShowModal(false);
+      setEditGroup(null);
+      setTimeout(loadGroups, 250);
+    } catch (err) {
+      console.error(err);
+      toast.error("Fehler beim Speichern");
+    }
+  };
 
   const deleteGroup = async (id) => {
     if (!window.confirm("Diese Gruppe wirklich löschen?")) return;
@@ -107,59 +108,60 @@ const saveGroup = async (payload) => {
   const sensors = useSensors(useSensor(PointerSensor));
 
   const handleDragEnd = async (event) => {
-  const { active, over } = event;
-  if (!over || active.id === over.id) return;
+    const { active, over } = event;
+    if (!over || active.id === over.id) return;
 
-  // IDs als String vergleichen
-  const oldIndex = groups.findIndex((g) => String(g.id) === String(active.id));
-  const newIndex = groups.findIndex((g) => String(g.id) === String(over.id));
-  if (oldIndex === -1 || newIndex === -1) return;
+    const oldIndex = groups.findIndex((g) => String(g.id) === String(active.id));
+    const newIndex = groups.findIndex((g) => String(g.id) === String(over.id));
+    if (oldIndex === -1 || newIndex === -1) return;
 
-  const newOrder = arrayMove(groups, oldIndex, newIndex).map((g, i) => ({
-    ...g,
-    sort_order: i + 1,
-  }));
+    const newOrder = arrayMove(groups, oldIndex, newIndex).map((g, i) => ({
+      ...g,
+      sort_order: i + 1,
+    }));
 
-  // Optimistic UI
-  setGroups(newOrder);
+    setGroups(newOrder);
 
-  try {
-    const payload = newOrder.map((g) => ({ id: g.id, sort_order: g.sort_order }));
-    const res = await api("type=groups", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(payload),
-    });
+    try {
+      const payload = newOrder.map((g) => ({ id: g.id, sort_order: g.sort_order }));
+      const res = await api("type=groups", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(payload),
+      });
+      if (res?.error) throw new Error(res.error);
 
-    // Falls dein API kein {ok:true} liefert: nur auf Fehler prüfen, nicht auf res.ok
-    if (res?.error) throw new Error(res.error);
+      toast.success("Reihenfolge gespeichert");
+      setTimeout(loadGroups, 400);
+    } catch (err) {
+      console.error("Fehler beim Speichern der Sortierung:", err);
+      toast.error("Fehler beim Speichern der Reihenfolge");
+      loadGroups();
+    }
+  };
 
-    toast.success("Reihenfolge gespeichert");
-    // Optional: leicht verzögert neu synchronisieren
-    setTimeout(loadGroups, 400);
-  } catch (err) {
-    console.error("Fehler beim Speichern der Sortierung:", err);
-    toast.error("Fehler beim Speichern der Reihenfolge");
-    // Rollback
-    loadGroups();
-  }
-};
+  const handleLogout = () => {
+    if (confirm("Möchtest du dich wirklich abmelden?")) {
+      logout();
+      navigate("/"); // 🔁 automatische Rückkehr zur Login-Seite
+    }
+  };
 
   return (
     <div className="min-h-screen bg-background text-foreground transition-colors">
       <div className="flex items-center gap-2">
         <Button
-            size="lg"
-            variant="light"
-            color="default"
-            radius="full"
-            isIconOnly
-            onPress={() => navigate("/")}
+          size="lg"
+          variant="light"
+          color="default"
+          radius="full"
+          isIconOnly
+          onPress={() => navigate("/")}
         >
-            <ArrowLeft size={18} />
+          <ArrowLeft size={18} />
         </Button>
         <div className="font-semibold">Einstellungen</div>
-        </div>
+      </div>
 
       <main className="mx-auto max-w-5xl px-4 py-8 space-y-10">
         <h2 className="text-xl font-semibold">Darstellung</h2>
@@ -195,17 +197,16 @@ const saveGroup = async (payload) => {
             </Button>
           </div>
 
-          {/* 🔹 Drag & Drop Liste */}
           <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={handleDragEnd}>
             <SortableContext items={groups.map((g) => String(g.id))} strategy={verticalListSortingStrategy}>
               <div className="grid gap-3">
                 {groups.map((g) => (
-                <SortableGroup
+                  <SortableGroup
                     key={g.id}
                     group={g}
-                    onEdit={(grp) => { setEditGroup(grp); setShowModal(true); }}  // 👈 öffnet das Modal
+                    onEdit={(grp) => { setEditGroup(grp); setShowModal(true); }}
                     onDelete={deleteGroup}
-                />
+                  />
                 ))}
               </div>
             </SortableContext>
@@ -214,6 +215,19 @@ const saveGroup = async (payload) => {
           {groups.length === 0 && (
             <p className="text-sm opacity-70 italic">Noch keine Gruppen vorhanden.</p>
           )}
+        </section>
+
+        {/* 🚪 Logout-Bereich */}
+        <section className="pt-8 border-t border-default-200">
+          <Button
+            color="danger"
+            variant="flat"
+            fullWidth
+            startContent={<LogOut size={18} />}
+            onPress={handleLogout}
+          >
+            Logout
+          </Button>
         </section>
       </main>
 
@@ -238,40 +252,39 @@ const saveGroup = async (payload) => {
                     onChange={(e) => (name = e.target.value)}
                     autoFocus
                   />
-                  {/* 🎨 Tailwind Color Picker */}
-                <div className="space-y-2">
-                <div className="flex items-center gap-2">
-                    <Palette size={18} className="text-foreground/60" />
-                    <span className="text-sm opacity-80">Farbe</span>
-                </div>
-                <div className="grid grid-cols-8 gap-2">
-                    {[
-                     "blue",
-      "violet",
-      "pink",
-      "orange",
-      "green",
-      "teal",
-      "yellow",
-      "rose",
-      "slate",
-      "cyan",
-      "lime",
-      "purple",
-                    ].map((c) => (
-                    <button
-                        key={c}
-                        type="button"
-                        onClick={() => (color = c)}
-                        className={`w-7 h-7 rounded-full border transition-all ${
-                        color === c
-                            ? "ring-2 ring-slate-100/80 border-primary"
-                            : "border-default-300 hover:scale-110"
-                        } bg-${c}-500`}                   
-                    />
-                    ))}
-                </div>
-                </div>
+                  <div className="space-y-2">
+                    <div className="flex items-center gap-2">
+                      <Palette size={18} className="text-foreground/60" />
+                      <span className="text-sm opacity-80">Farbe</span>
+                    </div>
+                    <div className="grid grid-cols-8 gap-2">
+                      {[
+                        "blue",
+                        "violet",
+                        "pink",
+                        "orange",
+                        "green",
+                        "teal",
+                        "yellow",
+                        "rose",
+                        "slate",
+                        "cyan",
+                        "lime",
+                        "purple",
+                      ].map((c) => (
+                        <button
+                          key={c}
+                          type="button"
+                          onClick={() => (color = c)}
+                          className={`w-7 h-7 rounded-full border transition-all ${
+                            color === c
+                              ? "ring-2 ring-slate-100/80 border-primary"
+                              : "border-default-300 hover:scale-110"
+                          } bg-${c}-500`}                   
+                        />
+                      ))}
+                    </div>
+                  </div>
                 </ModalBody>
                 <ModalFooter>
                   <Button variant="bordered" onPress={onClose}>
@@ -308,9 +321,7 @@ function SortableGroup({ group, onEdit, onDelete }) {
     >
       <div className="flex items-center gap-3">
         <GripVertical {...attributes} {...listeners} className="text-default-400 cursor-grab" />
-        <div
-          className={`h-5 w-5 rounded-full border bg-${group.color}-500`}  
-        ></div>
+        <div className={`h-5 w-5 rounded-full border bg-${group.color}-500`}></div>
         <span className="font-medium">{group.name}</span>
       </div>
       <div className="flex gap-2">
