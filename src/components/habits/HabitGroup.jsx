@@ -150,22 +150,22 @@ export default function HabitGroup({
       >
         <div className="flex items-center gap-2">
           {collapsed ? (
-            <ChevronRight size={18} className="text-slate-500" />
+            <ChevronRight size={18} className="text-slate-500 dark:text-neutral-500" />
           ) : (
-            <ChevronDown size={18} className="text-slate-500" />
+            <ChevronDown size={18} className="text-slate-500 dark:text-neutral-500" />
           )}
-          <span className="font-semibold text-sm text-slate-500">{groupName}</span>
+          <span className="font-semibold text-sm text-slate-500 dark:text-neutral-400">{groupName}</span>
         </div>
 
         {/* ✅ Gruppenfortschritt */}
         <div className="flex items-center gap-3 w-[40%]">
-          <div className="h-2 w-full rounded bg-slate-200 overflow-hidden">
+          <div className="h-2 w-full rounded bg-slate-200 dark:bg-neutral-800 overflow-hidden">
             <div
               className={`h-full bg-${groupColor}-500 transition-all`}
               style={{ width: `${pct}%` }}
             />
           </div>
-          <span className="text-xs text-slate-500">{pct}%</span>
+          <span className="text-xs text-slate-500 dark:text-neutral-500">{pct}%</span>
         </div>
       </div>
 

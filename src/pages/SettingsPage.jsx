@@ -30,9 +30,9 @@ import {
   Database,
 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
-import { useTheme } from "next-themes";
 import { AuthContext } from "@/context/AuthContext";
-import { api } from "../components";
+import { api } from "../components"; //TODO: ist das richtig?
+import { AppContext } from "@/context/AppContext";
 
 // 🧩 DnD imports
 import {
@@ -52,8 +52,6 @@ import { CSS } from "@dnd-kit/utilities";
 
 export default function SettingsPage() {
   const navigate = useNavigate();
-  const { theme, setTheme, resolvedTheme } = useTheme();
-  const [mounted, setMounted] = useState(false);
   const { logout } = useContext(AuthContext);
 
   const [groups, setGroups] = useState([]);
@@ -61,12 +59,11 @@ export default function SettingsPage() {
   const [showModal, setShowModal] = useState(false);
 
   // neue Settings
-  const [accentColor, setAccentColor] = useState("sky");
   const [sortMode, setSortMode] = useState("default");
   const [dayStart, setDayStart] = useState("05:00");
   const [weekStart, setWeekStart] = useState("monday");
 
-  useEffect(() => setMounted(true), []);
+  const { theme, setTheme, accentColor, setAccentColor } = useContext(AppContext);  
 
   // 🔹 Gruppen laden
   const loadGroups = async () => {
@@ -76,31 +73,6 @@ export default function SettingsPage() {
   useEffect(() => { loadGroups(); }, []);
 
   // 🔹 Gruppen speichern/löschen (wie vorher)
-  const saveGroup = async (payload) => {
-    try {
-      const res = await api(`type=groups${payload.id ? `&id=${payload.id}` : ""}`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(payload),
-      });
-      const newId = res?.id || payload.id;
-      setGroups((prev) => {
-        const existing = prev.find((g) => g.id === payload.id);
-        if (existing) {
-          return prev.map((g) => g.id === payload.id ? { ...g, ...payload } : g);
-        } else {
-          const maxOrder = Math.max(0, ...prev.map((g) => g.sort_order || 0));
-          const newGroup = { ...payload, id: newId, sort_order: maxOrder + 1 };
-          return [...prev, newGroup].sort((a, b) => a.sort_order - b.sort_order);
-        }
-      });
-      toast.success(payload.id ? "Gruppe aktualisiert" : "Gruppe erstellt");
-      setShowModal(false);
-    } catch (err) {
-      console.error(err);
-      toast.error("Fehler beim Speichern");
-    }
-  };
 
   const deleteGroup = async (id) => {
     if (!window.confirm("Diese Gruppe wirklich löschen?")) return;
@@ -153,7 +125,13 @@ export default function SettingsPage() {
   };
 
   return (
-    <div className="min-h-screen bg-background text-foreground transition-colors">
+    <div className="min-h-screen transition-colors">
+      <div className={`
+        fixed w-screen z-[-1] h-screen min-h-screen
+        bg-gradient-to-b from-slate-100 to-slate-200
+        dark:from-neutral-950 dark:to-${accentColor}-950/30
+        transition-colors duration-300
+        `}></div>
       <div className="flex items-center gap-2 px-4 pt-4">
         <Button
           size="lg"
@@ -175,18 +153,16 @@ export default function SettingsPage() {
           <h2 className="text-lg font-semibold mb-4 flex items-center gap-2">
             <Palette size={18} /> Erscheinungsbild
           </h2>
-          {mounted && (
-            <div className="flex justify-between items-center mb-4">
-              <span>Dark Mode</span>
-              <Switch
-                isSelected={resolvedTheme === "dark"}
-                onValueChange={(isDark) => setTheme(isDark ? "dark" : "light")}
-                color="primary"
-                startContent={<Sun size={14} />}
-                endContent={<Moon size={14} />}
-              />
-            </div>
-          )}
+          <div className="flex justify-between items-center mb-4">
+            <span>Dark Mode</span>
+            <Switch
+              isSelected={theme === "dark"}
+              onValueChange={(isDark) => setTheme(isDark ? "dark" : "light")}
+              color="primary"
+              startContent={<Sun size={14} />}
+              endContent={<Moon size={14} />}
+            />
+          </div>
           <div>
             <p className="text-sm mb-2">Accent-Farbe</p>
             <Select
@@ -245,7 +221,7 @@ export default function SettingsPage() {
             <Database size={18} /> Sync & Export
           </h2>
           <div className="flex flex-wrap gap-3">
-            <Button color="primary" onPress={handleExport}>Exportieren</Button>
+            <Button color="primary" className={`bg-${accentColor}-400`} onPress={handleExport}>Exportieren</Button>
             <Button color="danger" variant="flat" onPress={handleDeleteAll}>
               Alle Daten löschen
             </Button>
@@ -274,6 +250,7 @@ export default function SettingsPage() {
             <h2 className="text-xl font-semibold">Gruppen</h2>
             <Button
               color="primary"
+              className={`bg-${accentColor}-400`}
               startContent={<Plus size={16} />}
               onPress={() => { setEditGroup(null); setShowModal(true); }}
             >

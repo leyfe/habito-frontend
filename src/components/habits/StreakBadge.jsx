@@ -14,7 +14,7 @@ export default function StreakBadge({ value, minVisible = 3, size = "sm", classN
   if (!value || Math.abs(value) < minVisible) return null;
 
   const isPositive = value > 0;
-  const bg = isPositive ? "bg-slate-400 text-slate-100" : "bg-rose-400 text-slate-100";
+  const bg = isPositive ? "bg-slate-400 text-slate-100 dark:bg-neutral-400 dark:text-neutral-100" : "bg-rose-400 text-slate-100";
   const icon = isPositive ? (
     <Flame size={size === "lg" ? 18 : 14} className="text-slate-200" />
   ) : (

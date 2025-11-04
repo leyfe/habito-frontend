@@ -40,7 +40,7 @@ export default function StatsPage() {
   }, [habits,completions,week]);
 
   return (
-    <div className="min-h-screen bg-background text-foreground">
+    <div className="min-h-screen">
       <HeaderBar
         left={
 

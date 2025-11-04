@@ -12,9 +12,11 @@ module.exports = {
   safelist: [
     // Nur nötig für deine dynamischen Farbwerte (z. B. bg-${color}-500)
     {
-      pattern:
-        /((hover|focus):)?(bg|text|border|ring|fill|stroke|from|via|to)-(blue|violet|pink|orange|green|teal|yellow|rose|slate|cyan|lime|purple)-(100|200|300|400|500|600|700|800)/,
+      pattern: /((dark|hover|focus|active|disabled):)?(bg|text|border|ring|fill|stroke|from|via|to)-(blue|violet|pink|orange|green|teal|yellow|rose|slate|cyan|lime|purple|neutral)-(100|200|300|400|500|600|700|800|900|950)/,
     },
+    {
+      pattern: /(dark:)?(from|to)-(rose|violet|emerald|amber|blue|neutral)-(800|900|950)/
+    }
   ],
 
   theme: {

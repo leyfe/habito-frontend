@@ -159,15 +159,15 @@ const handleIncrement = () => {
   }
 };
 
-  const cardColor = done
-    ? "bg-slate-300 opacity-50 border-slate-200/0 text-slate-400 shadow-none"
-    : "bg-slate-100 border-slate-300";
+const cardColor = done
+  ? "bg-slate-300 dark:bg-neutral-800 opacity-50 border-slate-200/0 text-slate-400 dark:text-neutral-500 shadow-none"
+  : "bg-slate-100 dark:bg-neutral-800 border-slate-300 dark:border-neutral-700";
 
   /* -------------------------------- Render -------------------------------- */
 
   return (
     <Card
-      className={`relative group flex-row py-3 px-4 border rounded-2xl shadow-xl shadow-slate-200 transition-all duration-500
+      className={`relative group flex-row py-3 px-4 border rounded-2xl shadow-xl shadow-slate-200 dark:shadow-neutral-950 transition-all duration-500
         ${cardColor}
         ${partyMode ? "animate-[party_0.8s_ease-in-out]" : ""}
         ${shake ? "animate-shake" : ""}
@@ -195,7 +195,7 @@ const handleIncrement = () => {
       <div className="flex flex-1 items-center justify-between relative z-10">
         <div className="flex flex-1 items-center gap-3 pl-1">
             {habit.icon && (
-            <span className="text-slate-500">
+            <span className="text-slate-500 dark:text-neutral-300">
                 {React.createElement(
                 Icons[habit.icon] || Icons.HelpCircle,
                 //Icons[habit.icon] || CustomIcons[habit.icon] || Icons.HelpCircle,
@@ -204,10 +204,10 @@ const handleIncrement = () => {
             </span>
             )}
             <div>
-                <h3 className="font-semibold -mb-1 text-slate-600 text-md ">
+                <h3 className="font-semibold -mb-1 text-slate-600 dark:text-neutral-200 text-md ">
                     {habit.name}
                 </h3>
-                <span className="text-xs text-slate-500">
+                <span className="text-xs text-slate-500 dark:text-neutral-400">
                     {ownCount}/{ownLimit}{" "}
                     <span className="opacity-70">
                         {habit.frequency === "täglich"

@@ -21,6 +21,14 @@ export function AppProvider({ children }) {
   const [habits, setHabits] = useState(lsGet("habito.habits", []));
   const [todos, setTodos] = useState(lsGet("habito.todos", []));
   const [completions, setCompletions] = useState(lsGet("habito.completions", {}));
+  const [theme, setTheme] = useState(() => {return localStorage.getItem("theme") || "light";});
+  const [accentColor, setAccentColor] = useState(
+    localStorage.getItem("habito.accentColor") || "sky"
+  );
+
+  useEffect(() => {
+    localStorage.setItem("habito.accentColor", accentColor);
+  }, [accentColor]);
 
   // Hilfsfunktion: alle API-Calls automatisch mit Token
   const apiAuth = async (path, options = {}) => {
@@ -74,6 +82,11 @@ export function AppProvider({ children }) {
   useEffect(() => {
     if (token) loadAll();
   }, [token]);
+
+  useEffect(() => {
+    document.documentElement.classList.toggle("dark", theme === "dark");
+    localStorage.setItem("theme", theme);
+  }, [theme]);
 
   const increment = async (habitId, date) => {
     const iso = toISO(date);
@@ -239,6 +252,11 @@ export function AppProvider({ children }) {
         deleteTodo,
         loadAll,
         resetToday,
+        theme,
+        setTheme,
+        toggleTheme: () => setTheme((prev) => (prev === "light" ? "dark" : "light")),
+        accentColor,
+        setAccentColor,
       }}
     >
       {children}

@@ -51,6 +51,7 @@ export default function HomePage() {
     deleteTodo,
     resetToday,
     toggleTodo,
+    accentColor
   } = useContext(AppContext);
 
   const [showHabitModal, setShowHabitModal] = useState(false);
@@ -79,7 +80,13 @@ export default function HomePage() {
 
   return (
     <div className="">
-    <div className="-z-10 fixed w-screen h-screen min-h-screen bg-gradient-to-b from-slate-100 to-slate-200"></div>
+    {/*TODO: Accent color geht nicht*/}
+    <div className={`
+    fixed w-screen z-[-1] h-screen min-h-screen
+    bg-gradient-to-b from-slate-100 to-slate-200
+    dark:from-neutral-950 dark:to-${accentColor}-950/30
+    transition-colors duration-300
+    `}></div>
 
       {location.pathname !== "/auth" && <HeaderBar
         onNewHabit={() => setShowHabitModal(true)}
@@ -103,15 +110,19 @@ export default function HomePage() {
                 />
             ))}
         </div>
-            <ScrollShadow className="mx-auto overflow-visible py-2 bg-gradient-to-b from-slate-300/50 to-slate-200/90 left-0 right-0 backdrop-blur-sm z-50 left-0 sticky z-50 border-t-1 border-slate-100/0 shadow-[rgba(100,116,139,0.15)_0px_-25px_25px_0px] bottom-0">
-                <DayTimeline
-                activeDate={activeDate}
-                onChange={(newDate) => setActiveDate(newDate)}
-                habits={habits}
-                completions={completions}
-                />
-            </ScrollShadow>
-        <div className="w-screen p-4  bg-slate-500">
+          <ScrollShadow className="
+            mx-auto overflow-visible py-2 left-0 right-0 backdrop-blur-sm sticky z-50 border-t-1 bottom-0 bg-gradient-to-b
+            from-slate-300/50 to-slate-200/90 border-slate-100/0 shadow-[rgba(100,116,139,0.15)_0px_-25px_25px_0px]
+            dark:from-neutral-800 dark:to-neutral-800 border-slate-100/0 dark:shadow-[rgba(0,0,0,0.15)_0px_-25px_25px_0px]
+            ">
+              <DayTimeline
+              activeDate={activeDate}
+              onChange={(newDate) => setActiveDate(newDate)}
+              habits={habits}
+              completions={completions}
+              />
+          </ScrollShadow>
+        <div className="w-screen p-4 bg-slate-500 dark:bg-neutral-900">
         {todos.length > 0 && (
         <TodoGroup
             groupName="To-Dos"
