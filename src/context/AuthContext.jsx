@@ -10,7 +10,24 @@ export function AuthProvider({ children }) {
   // beim Start prüfen, ob schon User gespeichert ist
   useEffect(() => {
     const stored = localStorage.getItem("user");
-    if (stored) setUser(JSON.parse(stored));
+    if (stored) {
+    const parsed = JSON.parse(stored);
+    setUser(parsed);
+
+    // ✅ Token prüfen
+    fetch("http://52071041.swh.strato-hosting.eu/habito/auth.php?type=validate", {
+      headers: { Authorization: `Bearer ${parsed.token}` },
+    })
+      .then((res) => res.json())
+      .then((data) => {
+        if (!data.ok) {
+          console.warn("Token abgelaufen – automatische Abmeldung");
+          localStorage.removeItem("user");
+          setUser(null);
+        }
+      })
+      .catch(() => {});
+  }
   }, []);
 
   async function login(email, password) {

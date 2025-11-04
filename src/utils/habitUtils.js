@@ -31,69 +31,171 @@ export function addDays(date, days) {
 }
 
 // 🔥 Berechnet den aktuellen Streak (in Tagen, Wochen oder Monaten)
-export function calculateStreak(habit, completions) {
+export function calculateStreak(habit, completions, activeDate = new Date()) {
   const by = completions?.[habit.id] || {};
-  const today = new Date();
 
-  // je nach Frequenz unterschiedlich:
+  // Hilfsfunktionen: lokale Tage vergleichen, Keys IMMER via toISO(...)
+  const startOfDayLocal = (d) => {
+    const x = new Date(d);
+    x.setHours(0, 0, 0, 0);
+    return x;
+  };
+  const isoOf = (d) => toISO(startOfDayLocal(d)); // <— WICHTIG: dein toISO!
+
+  const isBad = habit.type === "bad";
+  const today = startOfDayLocal(activeDate);
+  const prev = new Date(today); prev.setDate(today.getDate() - 1);
+
+  // ---- TÄGLICH / PRO_TAG ----
   if (habit.frequency === "täglich" || habit.frequency === "pro_tag") {
-    let streak = 0;
-    for (let i = 0; i < 999; i++) {
-      const d = new Date();
-      d.setDate(today.getDate() - i);
-      const iso = d.toISOString().split("T")[0];
-      if (by[iso] && by[iso] >= (habit.times_per_day || 1)) {
-        streak++;
-      } else {
-        break;
-      }
-    }
-    return streak;
-  }
+    const limit = Math.max(1, Number(habit.times_per_day || 1));
 
-  if (habit.frequency === "pro_woche") {
-    // Montag bestimmen
-    const getMonday = (date) => {
-      const d = new Date(date);
-      const day = d.getDay();
-      const diff = d.getDate() - day + (day === 0 ? -6 : 1);
-      return new Date(d.setDate(diff));
+    const successOn = (d) => {
+      const v = Number(by[isoOf(d)] || 0);
+      return isBad ? v < limit : v >= limit;
     };
 
-    let streak = 0;
-    for (let i = 0; i < 999; i++) {
-      const monday = getMonday(
-        new Date(today.getFullYear(), today.getMonth(), today.getDate() - i * 7)
-      );
-      const isoPrefix = monday.toISOString().split("T")[0].slice(0, 10);
-      const weekSum = Object.entries(by)
-        .filter(([k]) => {
-          const date = new Date(k);
-          return date >= monday && date < new Date(monday.getTime() + 7 * 86400000);
-        })
-        .reduce((sum, [, v]) => sum + v, 0);
-      if (weekSum >= (habit.times_per_week || 1)) streak++;
+    // 1) Heute erfüllt? → ab heute rückwärts zählen (inkl. heute)
+    if (successOn(today)) {
+      let streak = 0;
+      for (let i = 0; i < 365; i++) {
+        const d = new Date(today);
+        d.setDate(today.getDate() - i);
+        if (successOn(d)) streak++;
+        else break;
+      }
+      return streak;
+    }
+
+    // 2) Heute noch nicht „erfüllt“, aber heute schon >0 → Serie ab heute = 1 + rückwärts
+    if (!successOn(today) && Number(by[isoOf(today)] || 0) > 0) {
+      let streak = 1;
+      let d = new Date(today); d.setDate(today.getDate() - 1);
+      while (successOn(d)) {
+        streak++;
+        d.setDate(d.getDate() - 1);
+      }
+      return streak;
+    }
+
+    // 3) Gestern erfüllt? → Serie bis gestern
+    if (successOn(prev)) {
+      let streak = 0;
+      for (let i = 0; i < 365; i++) {
+        const d = new Date(prev);
+        d.setDate(prev.getDate() - i);
+        if (successOn(d)) streak++;
+        else break;
+      }
+      return streak;
+    }
+
+    // 4) Weder heute noch gestern → negative Serie (verpasste Tage bis zur letzten Erfüllung)
+    let misses = 0;
+    for (let i = 0; i < 365; i++) {
+      const d = new Date(prev);
+      d.setDate(prev.getDate() - i);
+      if (!successOn(d)) misses++;
       else break;
     }
-    return streak;
+    return misses > 0 ? -misses : 0;
   }
 
-  if (habit.frequency === "pro_monat") {
-    let streak = 0;
-    for (let i = 0; i < 999; i++) {
-      const d = new Date(today.getFullYear(), today.getMonth() - i, 1);
-      const prefix = d.toISOString().slice(0, 7); // YYYY-MM
-      const monthSum = Object.entries(by)
-        .filter(([k]) => k.startsWith(prefix))
-        .reduce((sum, [, v]) => sum + v, 0);
-      if (monthSum >= (habit.times_per_month || 1)) streak++;
-      else break;
+  // ---- PRO_WOCHE ----
+  if (habit.frequency === "pro_woche") {
+    const limit = Math.max(1, Number(habit.times_per_week || 1));
+
+    const mondayOf = (d) => {
+      const x = startOfDayLocal(d);
+      const day = x.getDay() || 7; // So=0 → 7
+      x.setDate(x.getDate() - day + 1);
+      return x;
+    };
+
+    // Summe einer Woche: vergleiche über String-Keys (YYYY-MM-DD), NICHT Date-Parsing
+    const weekSum = (monday) => {
+      const start = mondayOf(monday);
+      const startIso = isoOf(start);
+      const end = new Date(start); end.setDate(start.getDate() + 7);
+      const endIso = isoOf(end);
+
+      return Object.entries(by).reduce((sum, [k, v]) => {
+        // k ist "YYYY-MM-DD" (lokal), daher Stringvergleich ok:
+        return (k >= startIso && k < endIso) ? sum + Number(v || 0) : sum;
+      }, 0);
+    };
+
+    const currentMonday = mondayOf(today);
+    const lastFullMonday = new Date(currentMonday);
+    lastFullMonday.setDate(lastFullMonday.getDate() - 7);
+
+    let pos = 0;
+    for (let i = 0; i < 104; i++) {
+      const m = new Date(lastFullMonday);
+      m.setDate(lastFullMonday.getDate() - i * 7);
+      const sum = weekSum(m);
+      const ok = isBad ? sum <= Math.max(0, 7 - limit) : sum >= limit;
+      if (ok) pos++; else break;
     }
-    return streak;
+    if (pos > 0) return pos;
+
+    let lastGood = null;
+    for (let i = 0; i < 104; i++) {
+      const m = new Date(lastFullMonday);
+      m.setDate(lastFullMonday.getDate() - i * 7);
+      const sum = weekSum(m);
+      const ok = isBad ? sum <= Math.max(0, 7 - limit) : sum >= limit;
+      if (ok) { lastGood = m; break; }
+    }
+    if (!lastGood) return 0;
+
+    const diffWeeks = Math.floor((lastFullMonday - lastGood) / (1000 * 60 * 60 * 24 * 7));
+    return diffWeeks >= 1 ? -diffWeeks : 0;
+  }
+
+  // ---- PRO_MONAT ----
+  if (habit.frequency === "pro_monat") {
+    const limit = Math.max(1, Number(habit.times_per_month || 1));
+
+    const ym = (d) => {
+      const x = startOfDayLocal(d);
+      return `${x.getFullYear()}-${String(x.getMonth() + 1).padStart(2, "0")}`;
+    };
+
+    const monthSum = (yearMonth) =>
+      Object.entries(by)
+        .filter(([k]) => k.startsWith(yearMonth)) // String-Check
+        .reduce((s, [, v]) => s + Number(v || 0), 0);
+
+    const lastFullMonth = new Date(today.getFullYear(), today.getMonth() - 1, 1);
+
+    let pos = 0;
+    for (let i = 0; i < 60; i++) {
+      const d = new Date(lastFullMonth.getFullYear(), lastFullMonth.getMonth() - i, 1);
+      const sum = monthSum(ym(d));
+      const ok = isBad ? sum === 0 : sum >= limit;
+      if (ok) pos++; else break;
+    }
+    if (pos > 0) return pos;
+
+    let lastGood = null;
+    for (let i = 0; i < 60; i++) {
+      const d = new Date(lastFullMonth.getFullYear(), lastFullMonth.getMonth() - i, 1);
+      const sum = monthSum(ym(d));
+      const ok = isBad ? sum === 0 : sum >= limit;
+      if (ok) { lastGood = d; break; }
+    }
+    if (!lastGood) return 0;
+
+    const diffMonths =
+      (lastFullMonth.getFullYear() - lastGood.getFullYear()) * 12 +
+      (lastFullMonth.getMonth() - lastGood.getMonth());
+    return diffMonths >= 1 ? -diffMonths : 0;
   }
 
   return 0;
 }
+
 
 // 🔹 Zähler abhängig vom Zeitraum bilden
 export function periodCount(habit, activeDate, completions) {
@@ -142,3 +244,4 @@ export function limitFor(habit) {
       return 1;
   }
 }
+
