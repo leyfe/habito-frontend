@@ -11,20 +11,22 @@ export default function WeekDots({ habit, weekISOs, completions, groupColor, sho
         show ? "opacity-100" : ""
       }`}
     >
-      {weekISOs.map((iso) => {
+      {weekISOs.map((iso, i) => {
+        const safeKey = iso || `weekdot-${i}`;
         let done = false;
+
         if (habit.frequency === "täglich" || habit.frequency === "pro_tag") {
           done = (by[iso] ?? 0) >= ownLimit;
         } else if (habit.frequency === "pro_woche") {
           done = (by[iso] ?? 0) > 0;
         } else if (habit.frequency === "pro_monat") {
-          done = Object.entries(by).some(([k, v]) => k.startsWith(iso.slice(0, 7)) && v > 0);
+          done = Object.entries(by).some(([k, v]) => k.startsWith(iso?.slice(0, 7)) && v > 0);
         }
         if (habit.type === "bad") done = !done;
 
         return (
           <div
-            key={iso}
+            key={safeKey}
             className={`w-4 h-1 rounded-full ${
               done ? `bg-${groupColor}-500` : "bg-slate-300/40 dark:bg-slate-700/40"
             }`}

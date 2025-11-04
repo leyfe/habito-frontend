@@ -19,14 +19,13 @@ import {
 } from "lucide-react";
 import * as Icons from "lucide-react";
 //import { CustomIcons } from "../../icons/CustomIcons.jsx";
-import { toISO, addDays } from "../index.js";
 import { toast } from "react-hot-toast";
 import HabitIntensityModal from "./HabitIntensityModal";
 import { AppContext } from "../../context/AppContext";
 import ButtonConfetti from "./ButtonConfetti";
 import WeekDots from "./WeekDots";
 import StreakBadge from "./StreakBadge";
-import { calculateStreak, periodCount, limitFor, weekIsoList} from "@/utils/habitUtils"; 
+import { toISO, addDays, calculateStreak, periodCount, limitFor, weekIsoList} from "@/utils/habitUtils"; 
 import { getLinkedGroup, isAnyOfGroupDone } from "@/utils/habitLinks";
 
 
@@ -41,6 +40,7 @@ export default function HabitCard({
   onResetTodayRequest,
   completions,
   groupColor = "slate",
+  isPreview = false, 
 }) {
   const { habits: allHabits, groups } = useContext(AppContext);
 
@@ -58,14 +58,12 @@ export default function HabitCard({
 useEffect(() => {
   if (!isLocalUpdate) {
     setLocalCompletions(completions);
-    setStreak(calculateStreak(habit, completions, activeDate)); // sofort neu berechnen
+    setStreak(calculateStreak(habit, completions, activeDate));
   } else {
-    // Lokales Update war manuell → nur kurz blocken
     const t = setTimeout(() => setIsLocalUpdate(false), 300);
     return () => clearTimeout(t);
   }
-}, [JSON.stringify(completions), habit.id, activeDate.toISOString()]);
-
+}, [JSON.stringify(completions), habit.id, activeDate ? activeDate.toISOString() : null]);
 
   const groupIds = getLinkedGroup(habit, allHabits);
   const linkedDone = isAnyOfGroupDone(groupIds, allHabits, activeDate, localCompletions);
@@ -206,7 +204,7 @@ const handleIncrement = () => {
             </span>
             )}
             <div>
-                <h3 className="font-semibold -mb-1 text-slate-600 text-md truncate">
+                <h3 className="font-semibold -mb-1 text-slate-600 text-md ">
                     {habit.name}
                 </h3>
                 <span className="text-xs text-slate-500">
@@ -234,11 +232,11 @@ const handleIncrement = () => {
           show={showWeekDots}
         />
 
-        {Math.abs(streak) >= 3 && (
+        {!isPreview && Math.abs(streak) >= 3 && (
           <StreakBadge value={streak} />
         )}
         
-        {/* Menü */}
+        {!isPreview && (
         <Dropdown isOpen={menuOpen} onOpenChange={setMenuOpen}>
           <DropdownTrigger>
             <Button
@@ -309,6 +307,7 @@ const handleIncrement = () => {
             </DropdownItem>
           </DropdownMenu>
         </Dropdown>
+        )}
       </div>
 
       {/* Button + Konfetti + Progress-Ring */}
@@ -364,8 +363,8 @@ const handleIncrement = () => {
             className={`border-0 rounded-full h-12 w-12 relative z-10 transition-all duration-300 ${
               done ? "bg-slate-500/0" : "bg-slate-100"
             }`}
-            onPress={handleIncrement}
-            isDisabled={false}
+            onPress={!isPreview ? handleIncrement : undefined}
+            isDisabled={isPreview}
           >
             {done ? (
               <Check className="text-white" size={32} />

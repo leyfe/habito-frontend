@@ -17,11 +17,19 @@ export function weekIsoList(date) {
 }
 
 export function toISO(date) {
+  // ❗ Fallback: leere Werte sofort abfangen
+  if (!date) return null;
+
   const d = new Date(date);
+
+  // ❗ Prüfen, ob das Datum gültig ist
+  if (isNaN(d.getTime())) return null;
+
+  // 👇 Dein bestehender Code bleibt gleich
   d.setHours(0, 0, 0, 0);
   const tzOffset = d.getTimezoneOffset() * 60000;
   const local = new Date(d.getTime() - tzOffset);
-  return local.toISOString().slice(0, 10); // z.B. "2025-10-29"
+  return local.toISOString().slice(0, 10);
 }
 
 export function addDays(date, days) {
@@ -199,6 +207,8 @@ export function calculateStreak(habit, completions, activeDate = new Date()) {
 
 // 🔹 Zähler abhängig vom Zeitraum bilden
 export function periodCount(habit, activeDate, completions) {
+  if (!activeDate) return 0; // 🧩 Schutz gegen null / undefined
+
   const by = completions?.[habit.id] || {};
   const iso = toISO(activeDate);
 
