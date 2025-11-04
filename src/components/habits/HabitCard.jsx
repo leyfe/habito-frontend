@@ -18,7 +18,7 @@ import {
   X,
 } from "lucide-react";
 import * as Icons from "lucide-react";
-//import { CustomIcons } from "../../icons/CustomIcons.jsx";
+import { CustomIcons } from "../../icons/CustomIcons.jsx";
 import { toast } from "react-hot-toast";
 import HabitIntensityModal from "./HabitIntensityModal";
 import { AppContext } from "../../context/AppContext";
@@ -197,8 +197,7 @@ const cardColor = done
             {habit.icon && (
             <span className="text-slate-500 dark:text-neutral-300">
                 {React.createElement(
-                Icons[habit.icon] || Icons.HelpCircle,
-                //Icons[habit.icon] || CustomIcons[habit.icon] || Icons.HelpCircle,
+                Icons[habit.icon] || CustomIcons[habit.icon] || Icons.HelpCircle,
                 { size: 22 }
                 )}
             </span>
@@ -340,7 +339,7 @@ const cardColor = done
                   cy="32"
                   r="28"
                   strokeWidth="8"
-                  className="fill-slate-100 transition-all duration-500 ease-out stroke-slate-200"
+                  className="fill-slate-100 dark:fill-neutral-800 transition-all duration-500 ease-out stroke-slate-200 dark:stroke-neutral-700"
                 />
                 <circle
                   cx="32"
@@ -350,7 +349,7 @@ const cardColor = done
                   strokeDasharray={2 * Math.PI * 28}
                   strokeDashoffset={2 * Math.PI * 28 * (1 - weekProgress)}
                   strokeLinecap="round"
-                  className={`fill-slate-100 transition-all duration-500 ease-out stroke-${groupColor}-500`}
+                  className={`fill-slate-100 dark:fill-neutral-700 transition-all duration-500 ease-out stroke-${groupColor}-500`}
                 />
               </>
             )}
@@ -361,7 +360,7 @@ const cardColor = done
             isIconOnly
             size="md"
             className={`border-0 rounded-full h-12 w-12 relative z-10 transition-all duration-300 ${
-              done ? "bg-slate-500/0" : "bg-slate-100"
+              done ? "bg-slate-500/0" : "bg-slate-100 dark:bg-neutral-800"
             }`}
             onPress={!isPreview ? handleIncrement : undefined}
             isDisabled={isPreview}
@@ -369,9 +368,9 @@ const cardColor = done
             {done ? (
               <Check className="text-white" size={32} />
             ) : isBadHabit ? (
-              <X className="text-slate-500" size={32} />
+              <X className="text-slate-500 dark:text-neutral-500" size={32} />
             ) : (
-              <Plus className="text-slate-500" size={32} />
+              <Plus className="text-slate-500 dark:text-neutral-500" size={32} />
             )}
           </Button>
 
