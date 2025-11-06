@@ -16,6 +16,7 @@ import {
   MoreVertical,
   Plus,
   X,
+  Activity
 } from "lucide-react";
 import * as Icons from "lucide-react";
 import { CustomIcons } from "../../icons/CustomIcons.jsx";
@@ -23,7 +24,6 @@ import { toast } from "react-hot-toast";
 import HabitIntensityModal from "./HabitIntensityModal";
 import { AppContext } from "../../context/AppContext";
 import ButtonConfetti from "./ButtonConfetti";
-import WeekDots from "./WeekDots";
 import StreakBadge from "./StreakBadge";
 import { toISO, addDays, calculateStreak, periodCount, limitFor, weekIsoList} from "@/utils/habitUtils"; 
 import { getLinkedGroup, isAnyOfGroupDone } from "@/utils/habitLinks";
@@ -53,6 +53,10 @@ export default function HabitCard({
   const [streak, setStreak] = useState(0);
   const [isLocalUpdate, setIsLocalUpdate] = useState(false);
 
+  const group = groups.find((g) => g.id === habit.group_id);
+  const isSportHabit =
+    group?.name?.toLowerCase().includes("sport") ||
+    group?.name?.toLowerCase().includes("training");
 
 // 🔄 Wenn globale Completions sich ändern (z. B. Reset), übernehmen
 useEffect(() => {
@@ -92,11 +96,11 @@ useEffect(() => {
   /* ------------------------------- UI-States ------------------------------- */
 
   const [menuOpen, setMenuOpen] = useState(false);
-  const [showWeekDots, setShowWeekDots] = useState(false);
   const [partyMode, setPartyMode] = useState(false);
   const [confetti, setConfetti] = useState(false);
   const [shake, setShake] = useState(false);
   const [showIntensity, setShowIntensity] = useState(false);
+  const { setHoveredHabitId } = useContext(AppContext);
 
   // Long-Press fürs Dropdown
     const timer = useRef(null);
@@ -143,10 +147,6 @@ const handleIncrement = () => {
   increment(habit.id, activeDate);
 
   // 🎉 Animation (optional)
-  const group = groups.find((g) => g.id === habit.group_id);
-  const isSportHabit =
-    group?.name?.toLowerCase().includes("sport") ||
-    group?.name?.toLowerCase().includes("training");
   if (isSportHabit) setTimeout(() => setShowIntensity(true), 300);
 
   if (prevCount < limit && prevCount + 1 >= limit) {
@@ -167,27 +167,32 @@ const cardColor = done
 
   return (
     <Card
-      className={`relative group flex-row py-3 px-4 border rounded-2xl shadow-xl shadow-slate-200 dark:shadow-neutral-950 transition-all duration-500
+      className={`relative group flex-row py-3 px-4 border rounded-2xl shadow-xl shadow-slate-200 dark:shadow-neutral-900 transition-all duration-500
         ${cardColor}
         ${partyMode ? "animate-[party_0.8s_ease-in-out]" : ""}
         ${shake ? "animate-shake" : ""}
       `}
+      onMouseEnter={() => setHoveredHabitId(habit.id)}
+      onMouseLeave={() => {
+        setTimeout(() => setHoveredHabitId(null), 50000);
+      }}
       onMouseDown={() => {
+        console.log('test', habit.id)
         handlePressStart();
-        setShowWeekDots(true);
+        setHoveredHabitId(habit.id);
       }}
       onMouseUp={() => {
         handlePressEnd();
-        setTimeout(() => setShowWeekDots(false), 5000);
+        setTimeout(() => setHoveredHabitId(null), 5000);
       }}
       onTouchStart={() => {
-        handlePressStart();
-        setShowWeekDots(true);
+                console.log('test', habit.id)
+        setHoveredHabitId(habit.id);
       }}
       onTouchMove={handlePressMove}
       onTouchEnd={() => {
         handlePressEnd();
-        setTimeout(() => setShowWeekDots(false), 5000);
+        setTimeout(() => setHoveredHabitId(null), 5000);
       }}
     >
 
@@ -223,14 +228,6 @@ const cardColor = done
             </div>
         </div>
 
-        <WeekDots
-          habit={habit}
-          weekISOs={weekISOs}
-          completions={localCompletions}
-          groupColor={groupColor}
-          show={showWeekDots}
-        />
-
         {!isPreview && Math.abs(streak) >= 3 && (
           <StreakBadge value={streak} />
         )}
@@ -246,7 +243,7 @@ const cardColor = done
               onPress={() => setMenuOpen(!menuOpen)}
               className="mr-2"
             >
-              <MoreVertical size={16} />
+              <MoreVertical className="dark:text-neutral-600" size={16} />
             </Button>
           </DropdownTrigger>
           <DropdownMenu
@@ -290,6 +287,16 @@ const cardColor = done
             <DropdownItem key="edit" startContent={<Edit3 size={14} />}>
               Bearbeiten
             </DropdownItem>
+            {isSportHabit && (
+              <DropdownItem
+                key="intensity"
+                startContent={<Activity size={16} />}
+                onPress={() => setShowIntensity(true)}
+              >
+                Intensität bearbeiten
+              </DropdownItem>
+            )}
+
             <DropdownItem
               key="reset"
               color="default"

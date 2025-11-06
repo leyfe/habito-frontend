@@ -22,6 +22,7 @@ export function AppProvider({ children }) {
   const [todos, setTodos] = useState(lsGet("habito.todos", []));
   const [completions, setCompletions] = useState(lsGet("habito.completions", {}));
   const [theme, setTheme] = useState(() => {return localStorage.getItem("theme") || "light";});
+  const [hoveredHabitId, setHoveredHabitId] = useState(null);
   const [accentColor, setAccentColor] = useState(
     localStorage.getItem("habito.accentColor") || "sky"
   );
@@ -257,6 +258,8 @@ export function AppProvider({ children }) {
         toggleTheme: () => setTheme((prev) => (prev === "light" ? "dark" : "light")),
         accentColor,
         setAccentColor,
+        hoveredHabitId,
+        setHoveredHabitId
       }}
     >
       {children}

@@ -85,7 +85,7 @@ export default function HabitModal({
       <ModalContent className="">
         {(onClose) => (
           <>
-            <ModalBody className=" rounded-2xl bg-slate-50 text-slate-600 space-y-6">
+            <ModalBody className="rounded-2xl bg-slate-50 dark:bg-neutral-900 text-slate-600 dark:text-neutral-200 space-y-6">
               <div className="flex flex-col">
                 <span className="text-xl font-semibold mt-6 mb-2">{form.id ? "Gewohnheit bearbeiten" : "Neue Gewohnheit"}</span>
                 <Tabs
@@ -123,7 +123,7 @@ export default function HabitModal({
 
               {/* 🎨 Erscheinungsbild */}
               <div className="space-y-3">
-                <h4 className="font-semibold text-sm text-slate-600">
+                <h4 className="font-semibold text-sm text-slate-600 dark:text-neutral-200">
                   Erscheinungsbild
                 </h4>
 
@@ -186,7 +186,7 @@ export default function HabitModal({
 
               {/* ⚙️ Allgemein */}
               <div className="space-y-3">
-                <h4 className="font-semibold text-sm text-slate-600">
+                <h4 className="font-semibold text-sm text-slate-600 dark:text-neutral-200">
                   Allgemein
                 </h4>
 
@@ -295,7 +295,7 @@ export default function HabitModal({
               </div>
             </ModalBody>
 
-            <ModalFooter className="bg-slate-50 rounded-2xl">
+            <ModalFooter className="bg-slate-50 dark:bg-neutral-800 rounded-2xl">
               <Button variant="light" onPress={onClose}>
                 Abbrechen
               </Button>

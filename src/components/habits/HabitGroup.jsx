@@ -3,40 +3,9 @@ import React, { useContext, useState } from "react";
 import { ChevronDown, ChevronRight } from "lucide-react";
 import HabitCard from "./HabitCard";
 import { AppContext } from "../../context/AppContext";
+import { toISO, limitFor, weekIsoList} from "@/utils/habitUtils"; 
 
 // 🧩 Hilfsfunktionen ----------------------------------------------------
-
-const toISO = (date) => new Date(date).toISOString().split("T")[0];
-
-const addDays = (date, days) => {
-  const d = new Date(date);
-  d.setDate(d.getDate() + days);
-  return d;
-};
-
-const weekIsoList = (date) => {
-  const d = new Date(date);
-  const mondayOffset = (d.getDay() + 6) % 7;
-  const monday = new Date(d);
-  monday.setDate(d.getDate() - mondayOffset);
-  return Array.from({ length: 7 }, (_, i) => toISO(addDays(monday, i)));
-};
-
-const limitFor = (h) => {
-  switch (h.frequency) {
-    case "täglich":
-    case "pro_tag":
-      return Math.max(1, Number(h.times_per_day || 1));
-    case "pro_woche":
-      return Math.max(1, Number(h.times_per_week || 1));
-    case "pro_monat":
-      return Math.max(1, Number(h.times_per_month || 1));
-    case "pro_jahr":
-      return Math.max(1, Number(h.times_per_year || 1));
-    default:
-      return 1;
-  }
-};
 
 // Fortschritt pro Habit (0–1, Teilfortschritt erlaubt)
 const habitProgress = (h, activeDate, completions) => {
@@ -171,59 +140,79 @@ export default function HabitGroup({
 
       {/* 🔹 Habits anzeigen */}
       {!collapsed && (
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-2">
+        <div className="grid grid-cols-1 gap-2">
           {clusters.map((cluster, i) => {
-  // alle Habits-Objekte aus den IDs holen
-  const habitsInCluster = cluster.map((id) => byId.get(String(id))).filter(Boolean);
+            // alle Habits-Objekte aus den IDs holen
+            const habitsInCluster = cluster.map((id) => byId.get(String(id))).filter(Boolean);
 
-  // Wenn nur 1 Habit → normale Darstellung
-  if (habitsInCluster.length === 1) {
-    const habit = habitsInCluster[0];
-    return (
-      <HabitCard
-        key={habit.id}
-        habit={habit}
-        activeDate={activeDate}
-        increment={increment}
-        getDayLimit={getDayLimit}
-        onEditRequest={onEditRequest}
-        onDeleteRequest={onDeleteRequest}
-        onResetTodayRequest={onResetTodayRequest}
-        completions={completions}
-        groupColor={
-          groups.find((g) => g.id === habit.group_id)?.color || "slate"
-        }
-      />
-    );
-  }
-
-  // Wenn mehrere → in gemeinsamer Card rendern
-  return (
-    <div
-      key={i}
-      className="rounded-2xl border-slate-300 mb-2"
-    >
-      <div className="flex gap-0.5 flex-col">
-        {habitsInCluster.map((habit) => (
-          <HabitCard
-            key={habit.id}
-            habit={habit}
-            activeDate={activeDate}
-            increment={increment}
-            getDayLimit={getDayLimit}
-            onEditRequest={onEditRequest}
-            onDeleteRequest={onDeleteRequest}
-            onResetTodayRequest={onResetTodayRequest}
-            completions={completions}
-            groupColor={
-              groups.find((g) => g.id === habit.group_id)?.color || "slate"
+            // Wenn nur 1 Habit → normale Darstellung
+            if (habitsInCluster.length === 1) {
+              const habit = habitsInCluster[0];
+              return (
+                <HabitCard
+                  key={habit.id}
+                  habit={habit}
+                  activeDate={activeDate}
+                  increment={increment}
+                  getDayLimit={getDayLimit}
+                  onEditRequest={onEditRequest}
+                  onDeleteRequest={onDeleteRequest}
+                  onResetTodayRequest={onResetTodayRequest}
+                  completions={completions}
+                  groupColor={
+                    groups.find((g) => g.id === habit.group_id)?.color || "slate"
+                  }
+                />
+              );
             }
-          />
-        ))}
-      </div>
-    </div>
-  );
-})}
+
+            // Wenn mehrere → in gemeinsamer Card rendern
+            return (
+              <div key={i} className="rounded-2xl border-slate-300">
+                <div className="flex gap-1 flex-col">
+                  {(() => {
+                    // 🔹 heutiges lokales ISO-Datum
+                    const iso = toISO(activeDate);
+
+                    // 🔹 prüfen, ob irgendein Habit im Cluster heute erfüllt wurde
+                    const clusterDoneToday = habitsInCluster.some(
+                      (h) => (completions?.[h.id]?.[iso] ?? 0) > 0
+                    );
+
+                    // 🔹 dynamische Farbe basierend auf Cluster-Status
+                    const lineColor = clusterDoneToday
+                      ? "dark:bg-neutral-800/80 bg-slate-400/30"
+                      : "dark:bg-neutral-700/60 bg-slate-400/30";
+
+                    // 🔹 Cluster-UI rendern
+                    return habitsInCluster.map((habit, index) => (
+                      <div key={habit.id} className="relative">
+                        {index > 0 && (
+                          <span
+                            className={`absolute h-1 -top-1 rounded-xl linked transition-colors ${lineColor}`}
+                          />
+                        )}
+
+                        <HabitCard
+                          habit={habit}
+                          activeDate={activeDate}
+                          increment={increment}
+                          getDayLimit={getDayLimit}
+                          onEditRequest={onEditRequest}
+                          onDeleteRequest={onDeleteRequest}
+                          onResetTodayRequest={onResetTodayRequest}
+                          completions={completions}
+                          groupColor={
+                            groups.find((g) => g.id === habit.group_id)?.color || "slate"
+                          }
+                        />
+                      </div>
+                    ));
+                  })()}
+                </div>
+              </div>
+            );
+          })}
         </div>
       )}
     </div>

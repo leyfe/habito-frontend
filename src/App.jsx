@@ -19,13 +19,15 @@ export default function App() {
 
   return (
     <AppProvider>
-      <Toaster position="bottom-center" />
 
       <Routes>
         <Route path="/" element={<HomePage />} />
         <Route path="/stats" element={<StatsPage />} />
         <Route path="/settings" element={<SettingsPage />} />
       </Routes>
+
+      <Toaster position="bottom-center" />
+
     </AppProvider>
   );
 }

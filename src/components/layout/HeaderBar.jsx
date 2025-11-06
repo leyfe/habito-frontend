@@ -26,7 +26,7 @@ export default function BottomNav({ onNewHabit, onNewTodo }) {
   ];
 
   return (
-    <nav className="z-50 border-b-1 pt-6 left-0 right-0 flex justify-around py-3 z-50">
+    <nav className="z-50 border-b-1 dark:border-neutral-700 pt-6 left-0 right-0 flex justify-around py-3 z-50">
       {navItems.map(({ to, label, icon, space }) => (
         <NavLink
           key={to}
@@ -34,8 +34,8 @@ export default function BottomNav({ onNewHabit, onNewTodo }) {
           className={({ isActive }) =>
             `${space} flex flex-col items-center gap-1 text-xs transition-colors ${
               isActive
-                ? `text-slate-500`
-                : "text-slate-500 hover:text-slate-500"
+                ? `text-slate-500 dark:text-neutral-500`
+                : "text-slate-500 dark:text-neutral-500 hover:text-slate-500"
             }`
           }
         >
@@ -54,7 +54,7 @@ export default function BottomNav({ onNewHabit, onNewTodo }) {
               "bg-slate-100/0 absolute top-2  rounded-full",
             )}
           >
-            <Plus className="text-slate-500" size={22} />
+            <Plus className="text-slate-500 dark:text-neutral-500" size={22} />
           </Button>
         </DropdownTrigger>
 

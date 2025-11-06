@@ -3,6 +3,7 @@ import React, { useState, useContext } from "react";
 import { Input, Button, Card } from "@nextui-org/react";
 import { AuthContext } from "../context/AuthContext";
 import { toast } from "react-hot-toast";
+import Background from "../components/ui/Background.jsx";
 
 export default function LoginPage() {
   const { login, register } = useContext(AuthContext);
@@ -23,8 +24,11 @@ export default function LoginPage() {
   }
 
   return (
-    <div className="flex items-center justify-center min-h-screen bg-slate-100">
-      <Card className="p-8 w-full max-w-md shadow-xl">
+    <div className="flex items-center justify-center min-h-screen">
+      <Background></Background>
+
+    
+      <Card className="p-8 dark:bg-neutral-900 max-w-[90%] w-full sm:max-w-md shadow-xl">
         <h1 className="text-2xl font-semibold mb-6 text-center">
           {mode === "login" ? "Anmelden" : "Registrieren"}
         </h1>
@@ -48,6 +52,7 @@ export default function LoginPage() {
           <Button
             type="submit"
             color="primary"
+            size="lg"
             isLoading={loading}
             fullWidth
             className="mt-4"
@@ -56,7 +61,7 @@ export default function LoginPage() {
           </Button>
         </form>
 
-        <p className="mt-4 text-sm text-center text-slate-500">
+        <p className="mt-4 text-sm text-center text-slate-500 dark:text-neutral-500">
           {mode === "login" ? (
             <>
               Noch kein Konto?{" "}
