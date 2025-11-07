@@ -1,6 +1,6 @@
 RewriteEngine On
-RewriteBase /habito/
+RewriteBase /habits/
 RewriteRule ^index\.html$ - [L]
 RewriteCond %{REQUEST_FILENAME} !-f
 RewriteCond %{REQUEST_FILENAME} !-d
-RewriteRule . /habito/index.html [L]
+RewriteRule . /habits/index.html [L]

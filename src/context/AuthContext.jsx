@@ -6,6 +6,7 @@ export const AuthContext = createContext(null); // 👈 DAS exportieren wir expl
 
 export function AuthProvider({ children }) {
   const [user, setUser] = useState(null);
+  const AUTH_API_URL = import.meta.env.VITE_AUTH_URL;
 
   // beim Start prüfen, ob schon User gespeichert ist
   useEffect(() => {
@@ -13,9 +14,9 @@ export function AuthProvider({ children }) {
     if (stored) {
     const parsed = JSON.parse(stored);
     setUser(parsed);
-
+    
     // ✅ Token prüfen
-    fetch("http://52071041.swh.strato-hosting.eu/habito/auth.php?type=validate", {
+    fetch(`${AUTH_API_URL}?type=validate`, {
       headers: { Authorization: `Bearer ${parsed.token}` },
     })
       .then((res) => res.json())
@@ -32,7 +33,7 @@ export function AuthProvider({ children }) {
 
   async function login(email, password) {
     try {
-      const res = await fetch("http://52071041.swh.strato-hosting.eu/habito/auth.php?type=login", {
+      const res = await fetch(`${AUTH_API_URL}?type=login`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ email, password }),
@@ -51,7 +52,7 @@ export function AuthProvider({ children }) {
 
   async function register(email, password) {
     try {
-      const res = await fetch("http://52071041.swh.strato-hosting.eu/habito/auth.php?type=register", {
+      const res = await fetch(`${AUTH_API_URL}?type=register`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ email, password }),

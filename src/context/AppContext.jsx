@@ -17,18 +17,18 @@ export function AppProvider({ children }) {
     return today;
   });
 
-  const [groups, setGroups] = useState(lsGet("habito.groups", []));
-  const [habits, setHabits] = useState(lsGet("habito.habits", []));
-  const [todos, setTodos] = useState(lsGet("habito.todos", []));
-  const [completions, setCompletions] = useState(lsGet("habito.completions", {}));
+  const [groups, setGroups] = useState(lsGet("dailycycle.groups", []));
+  const [habits, setHabits] = useState(lsGet("dailycycle.habits", []));
+  const [todos, setTodos] = useState(lsGet("dailycycle.todos", []));
+  const [completions, setCompletions] = useState(lsGet("dailycycle.completions", {}));
   const [theme, setTheme] = useState(() => {return localStorage.getItem("theme") || "light";});
   const [hoveredHabitId, setHoveredHabitId] = useState(null);
   const [accentColor, setAccentColor] = useState(
-    localStorage.getItem("habito.accentColor") || "sky"
+    localStorage.getItem("dailycycle.accentColor") || "sky"
   );
 
   useEffect(() => {
-    localStorage.setItem("habito.accentColor", accentColor);
+    localStorage.setItem("dailycycle.accentColor", accentColor);
   }, [accentColor]);
 
   // Hilfsfunktion: alle API-Calls automatisch mit Token
@@ -49,8 +49,8 @@ export function AppProvider({ children }) {
         apiAuth("?type=groups"),
       ]);
 
-      const allGroups = Array.isArray(g) ? g : lsGet("habito.groups", []);
-      const fixedHabits = (h?.length ? h : lsGet("habito.habits", [])).map((hb) => {
+      const allGroups = Array.isArray(g) ? g : lsGet("dailycycle.groups", []);
+      const fixedHabits = (h?.length ? h : lsGet("dailycycle.habits", [])).map((hb) => {
         if (!hb.group_id && hb.group) {
           const match = allGroups.find((gx) => gx.name === hb.group);
           if (match) return { ...hb, group_id: match.id };
@@ -59,8 +59,8 @@ export function AppProvider({ children }) {
       });
 
       setGroups(allGroups);
-      setHabits(Array.isArray(h) ? h : lsGet("habito.habits", []));
-      setTodos(Array.isArray(t) ? t : lsGet("habito.todos", []));
+      setHabits(Array.isArray(h) ? h : lsGet("dailycycle.habits", []));
+      setTodos(Array.isArray(t) ? t : lsGet("dailycycle.todos", []));
 
       const map = {};
       for (const hb of fixedHabits) {
@@ -71,10 +71,10 @@ export function AppProvider({ children }) {
       }
       setCompletions(map);
 
-      lsSet("habito.groups", allGroups);
-      lsSet("habito.habits", fixedHabits);
-      lsSet("habito.todos", t || []);
-      lsSet("habito.completions", map);
+      lsSet("dailycycle.groups", allGroups);
+      lsSet("dailycycle.habits", fixedHabits);
+      lsSet("dailycycle.todos", t || []);
+      lsSet("dailycycle.completions", map);
     } catch (err) {
       console.error("Load error:", err);
     }
@@ -95,7 +95,7 @@ export function AppProvider({ children }) {
       const copy = structuredClone(prev || {});
       if (!copy[habitId]) copy[habitId] = {};
       copy[habitId][iso] = (copy[habitId][iso] || 0) + 1;
-      lsSet("habito.completions", copy);
+      lsSet("dailycycle.completions", copy);
       return copy;
     });
     try {
@@ -114,7 +114,7 @@ export function AppProvider({ children }) {
       await apiAuth(`id=${habit.id}`, { method: "DELETE" });
       setHabits((prev) => {
         const updated = prev.filter((h) => h.id !== habit.id);
-        lsSet("habito.habits", updated);
+        lsSet("dailycycle.habits", updated);
         return updated;
       });
       toast.success(`"${habit.name}" gelöscht`);
@@ -139,7 +139,7 @@ export function AppProvider({ children }) {
           const updated = hs.map((h) =>
             h.id === payload.id ? { ...h, ...payload } : h
           );
-          lsSet("habito.habits", updated);
+          lsSet("dailycycle.habits", updated);
           return updated;
         });
       } else {
@@ -147,7 +147,7 @@ export function AppProvider({ children }) {
         const item = { ...payload, id };
         setHabits((hs) => {
           const arr = [item, ...hs];
-          lsSet("habito.habits", arr);
+          lsSet("dailycycle.habits", arr);
           return arr;
         });
       }
@@ -167,7 +167,7 @@ export function AppProvider({ children }) {
     });
     setTodos((ts) => {
       const arr = ts.map((t) => (t.id === todo.id ? upd : t));
-      lsSet("habito.todos", arr);
+      lsSet("dailycycle.todos", arr);
       return arr;
     });
   };
@@ -183,7 +183,7 @@ export function AppProvider({ children }) {
           const updated = todos.map((t) =>
             Number(t.id) === Number(payload.id) ? { ...t, ...payload } : t
           );
-          lsSet("habito.todos", updated);
+          lsSet("dailycycle.todos", updated);
           return updated;
         });
         toast.success(`"${payload.name}" aktualisiert ✅`);
@@ -197,7 +197,7 @@ export function AppProvider({ children }) {
       const newTodo = { id, ...payload, done: false };
       setTodos((todos) => {
         const arr = [newTodo, ...todos];
-        lsSet("habito.todos", arr);
+        lsSet("dailycycle.todos", arr);
         return arr;
       });
       toast.success(`"${payload.name}" hinzugefügt ✨`);
@@ -224,7 +224,7 @@ export function AppProvider({ children }) {
       const by = { ...(copy[habit.id] || {}) };
       delete by[iso];
       copy[habit.id] = by;
-      lsSet("habito.completions", copy);
+      lsSet("dailycycle.completions", copy);
       return copy;
     });
     try {

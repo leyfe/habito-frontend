@@ -3,14 +3,17 @@ import react from "@vitejs/plugin-react";
 import path from "path";
 
 export default defineConfig(({ mode }) => ({
-  base: mode === "production" ? "/habito/" : "/",
+  base: mode === "production" ? "/habits/" : "/",
   plugins: [
     react({
-      babel: { plugins: [] }, // kein React Refresh
-      fastRefresh: false,     // verhindert eval()
+      babel: { plugins: [] },
+      fastRefresh: false,
     }),
   ],
   build: {
+    outDir: "dist",
+    emptyOutDir: true,
+    assetsDir: "assets",
     minify: "terser",
     sourcemap: false,
   },

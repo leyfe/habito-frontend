@@ -22,12 +22,10 @@ export default function LoginPage() {
       setLoading(false);
     }
   }
-
   return (
     <div className="flex items-center justify-center min-h-screen">
+      
       <Background></Background>
-
-    
       <Card className="p-8 dark:bg-neutral-900 max-w-[90%] w-full sm:max-w-md shadow-xl">
         <h1 className="text-2xl font-semibold mb-6 text-center">
           {mode === "login" ? "Anmelden" : "Registrieren"}
