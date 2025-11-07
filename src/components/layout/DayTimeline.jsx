@@ -1,8 +1,9 @@
 // src/components/layout/DayTimeline.jsx
-import React, { useRef, useEffect, useMemo, useState } from "react";
+import React, { useRef, useEffect, useMemo, useState, useContext } from "react";
 import { CircularProgressbar, buildStyles } from "react-circular-progressbar";
 import "react-circular-progressbar/dist/styles.css";
-import { addDays, toISO } from "../index.js";
+import { AppContext } from "@/context/AppContext";
+import { addDays, toISO, weekIsoList } from "../../utils/habitUtils";
 import { Chip, Button } from "@nextui-org/react";
 
 export default function DayTimeline({
@@ -17,6 +18,8 @@ export default function DayTimeline({
   const [visibleMonth, setVisibleMonth] = useState("");
   const [showMonth, setShowMonth] = useState(false);
   const hideTimeout = useRef(null);
+  const currentWeekIsos = weekIsoList(activeDate);
+  const { hoveredHabitId } = useContext(AppContext);
 
   // 🧭 Heutiges Datum sauber auf Mitternacht setzen
   const today = useMemo(() => {
@@ -139,11 +142,17 @@ export default function DayTimeline({
           const isFuture = d > today;
           const dayPct = getDayProgress(iso);
 
+          const hoveredActive =
+            hoveredHabitId &&
+            currentWeekIsos.includes(iso) &&
+            completions?.[hoveredHabitId]?.[iso] > 0;
+
           const base =
             "px-2 py-2 rounded-2xl text-sm text-center select-none transition-all flex flex-col items-center";
           const look = isActive
-            ? "min-w-[64px] bg-gradient-to-b from-slate-400/30 to-slate-400/30 text-slate-500"
-            : "text-slate-500 hover:bg-slate-200";
+            ? "min-w-[64px] bg-slate-400/30 text-slate-500 dark:bg-neutral-700/70 dark:text-neutral-300"
+            : "text-slate-500 dark:text-neutral-400 hover:bg-slate-200 dark:hover:bg-neutral-700/50";
+
           const dis =
             isFuture && disableFuture ? "opacity-40 pointer-events-none" : "";
 
@@ -151,9 +160,12 @@ export default function DayTimeline({
             <button
               key={iso}
               onClick={() => onChange(d)}
-              className={`${base} ${look} ${dis}`}
+              className={`relative ${base} ${look} ${dis}`}
               title={`${iso} (${dayPct} %)`}
             >
+              {hoveredActive && (
+                <div className="absolute w-8 h-1 -bottom-2.5 left-0 right-0 m-auto rounded-2xl bg-neutral-400/50 animate-pulse" />
+              )}
               <div className="font-medium">{weekdayShort(d)}</div>
 
               {/* 🔹 Kreis-Fortschritt */}

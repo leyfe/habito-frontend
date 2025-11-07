@@ -33,6 +33,8 @@ import { useNavigate } from "react-router-dom";
 import { AuthContext } from "@/context/AuthContext";
 import { api } from "../components"; //TODO: ist das richtig?
 import { AppContext } from "@/context/AppContext";
+import Background from "../components/ui/Background.jsx";
+
 
 // 🧩 DnD imports
 import {
@@ -124,14 +126,41 @@ export default function SettingsPage() {
     }
   };
 
+  // 🔹 Gruppe speichern (neu oder Update)
+  const saveGroup = async (payload) => {
+    try {
+      const res = await api(`type=groups${payload.id ? `&id=${payload.id}` : ""}`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(payload),
+      });
+
+      const newId = res?.id || payload.id;
+
+      setGroups((prev) => {
+        const exists = prev.some((g) => g.id === payload.id);
+        if (exists) {
+          return prev.map((g) => (g.id === payload.id ? { ...g, ...payload } : g));
+        } else {
+          const maxOrder = Math.max(0, ...prev.map((g) => g.sort_order || 0));
+          const newGroup = { ...payload, id: newId, sort_order: maxOrder + 1 };
+          return [...prev, newGroup].sort((a, b) => a.sort_order - b.sort_order);
+        }
+      });
+
+      toast.success(payload.id ? "Gruppe aktualisiert" : "Gruppe erstellt");
+      setShowModal(false);
+      setEditGroup(null);
+      setTimeout(loadGroups, 250);
+    } catch (err) {
+      console.error(err);
+      toast.error("Fehler beim Speichern");
+    }
+  };
+
   return (
     <div className="min-h-screen transition-colors">
-      <div className={`
-        fixed w-screen z-[-1] h-screen min-h-screen
-        bg-gradient-to-b from-slate-100 to-slate-200
-        dark:from-neutral-950 dark:to-${accentColor}-950/30
-        transition-colors duration-300
-        `}></div>
+      <Background></Background>
       <div className="flex items-center gap-2 px-4 pt-4">
         <Button
           size="lg"
@@ -290,6 +319,60 @@ export default function SettingsPage() {
             Logout
           </Button>
         </section>
+
+        {/* 🟣 Modal für Gruppen */}
+        <Modal isOpen={showModal} onOpenChange={setShowModal}>
+          <ModalContent>
+            {(onClose) => {
+              let name = editGroup?.name || "";
+              let color = editGroup?.color || "blue";
+              const save = () => {
+                if (!name.trim()) return toast.error("Bitte Namen eingeben");
+                saveGroup({ id: editGroup?.id, name, color });
+                onClose();
+              };
+              return (
+                <>
+                  <ModalHeader>{editGroup ? "Gruppe bearbeiten" : "Neue Gruppe"}</ModalHeader>
+                  <ModalBody className="space-y-4">
+                    <Input
+                      label="Gruppenname"
+                      defaultValue={name}
+                      onChange={(e) => (name = e.target.value)}
+                      autoFocus
+                    />
+                    <div className="space-y-2">
+                      <p className="text-sm opacity-70">Farbe</p>
+                      <div className="grid grid-cols-8 gap-2">
+                        {["sky", "violet", "rose", "emerald", "amber", "blue", "neutral"].map((c) => (
+                          <button
+                            key={c}
+                            type="button"
+                            onClick={() => (color = c)}
+                            className={`w-7 h-7 rounded-full border transition-all ${
+                              color === c
+                                ? "ring-2 ring-offset-2 ring-primary border-primary"
+                                : "border-default-300 hover:scale-110"
+                            } bg-${c}-500`}
+                          />
+                        ))}
+                      </div>
+                    </div>
+                  </ModalBody>
+                  <ModalFooter>
+                    <Button variant="bordered" onPress={onClose}>
+                      Abbrechen
+                    </Button>
+                    <Button color="primary" onPress={save}>
+                      Speichern
+                    </Button>
+                  </ModalFooter>
+                </>
+              );
+            }}
+          </ModalContent>
+        </Modal>
+
       </main>
     </div>
   );

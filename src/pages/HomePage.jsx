@@ -12,6 +12,7 @@ import { ScrollShadow, ButtonGroup, Button } from "@nextui-org/react";
 import { Calendar1, ChartNoAxesColumn, Settings } from "lucide-react";
 import { toISO } from "../components/index.js";
 import { useNavigate } from "react-router-dom";
+import Background from "../components/ui/Background.jsx";
 
 // 🔹 Bestimmt, wie viele Einträge nötig sind, um das Habit als "erfüllt" zu werten
 const getDayLimit = (habit) => {
@@ -81,12 +82,7 @@ export default function HomePage() {
   return (
     <div className="">
     {/*TODO: Accent color geht nicht*/}
-    <div className={`
-    fixed w-screen z-[-1] h-screen min-h-screen
-    bg-gradient-to-b from-slate-100 to-slate-200
-    dark:from-neutral-950 dark:to-${accentColor}-950/30
-    transition-colors duration-300
-    `}></div>
+    <Background></Background>
 
       {location.pathname !== "/auth" && <HeaderBar
         onNewHabit={() => setShowHabitModal(true)}

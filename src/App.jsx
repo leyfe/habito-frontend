@@ -11,21 +11,24 @@ import StatsPage from "./pages/StatsPage";
 import SettingsPage from "./pages/SettingsPage";
 
 export default function App() {
+  console.log("✅ App component loaded");
   const { user } = useContext(AuthContext);
-
+  
   if (!user) {
     return <LoginPage />;
   }
 
   return (
     <AppProvider>
-      <Toaster position="bottom-center" />
 
       <Routes>
         <Route path="/" element={<HomePage />} />
         <Route path="/stats" element={<StatsPage />} />
         <Route path="/settings" element={<SettingsPage />} />
       </Routes>
+
+      <Toaster position="bottom-center" />
+
     </AppProvider>
   );
 }

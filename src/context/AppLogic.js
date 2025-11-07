@@ -5,12 +5,12 @@ import { api, lsGet, lsSet, toISO, addDays, API_URL } from "../components";
 
 export default function useAppLogic() {
   const [activeDate, setActiveDate] = useState(() => new Date());
-  const [groups, setGroups] = useState(lsGet("habito.groups", []));
-  const [habits, setHabits] = useState(lsGet("habito.habits", []));
-  const [todos, setTodos] = useState(lsGet("habito.todos", []));
-  const [completions, setCompletions] = useState(lsGet("habito.completions", {}));
+  const [groups, setGroups] = useState(lsGet("dailycycle.groups", []));
+  const [habits, setHabits] = useState(lsGet("dailycycle.habits", []));
+  const [todos, setTodos] = useState(lsGet("dailycycle.todos", []));
+  const [completions, setCompletions] = useState(lsGet("dailycycle.completions", {}));
 
-  const [collapsed, setCollapsed] = useState(() => lsGet("habito-collapsed", {}));
+  const [collapsed, setCollapsed] = useState(() => lsGet("dailycycle-collapsed", {}));
   const [showHabitModal, setShowHabitModal] = useState(false);
   const [editHabit, setEditHabit] = useState(null);
   const [showTodoModal, setShowTodoModal] = useState(false);
@@ -20,7 +20,7 @@ export default function useAppLogic() {
 
   const setCollapsedPersist = (next) => {
     setCollapsed(next);
-    lsSet("habito-collapsed", next);
+    lsSet("dailycycle-collapsed", next);
   };
 
   const loadAll = async () => {
@@ -28,9 +28,9 @@ export default function useAppLogic() {
     const t = await api("?type=todos");
     const g = await api("?type=groups");
 
-    const allGroups = Array.isArray(g) ? g : lsGet("habito.groups", []);
+    const allGroups = Array.isArray(g) ? g : lsGet("dailycycle.groups", []);
 
-    const fixedHabits = (h?.length ? h : lsGet("habito.habits", [])).map((hb) => {
+    const fixedHabits = (h?.length ? h : lsGet("dailycycle.habits", [])).map((hb) => {
       if (!hb.group_id && hb.group) {
         const match = allGroups.find((gx) => gx.name === hb.group);
         if (match) return { ...hb, group_id: match.id };
@@ -39,8 +39,8 @@ export default function useAppLogic() {
     });
 
     setGroups(allGroups);
-    setHabits(Array.isArray(h) ? h : lsGet("habito.habits", []));
-    setTodos(Array.isArray(t) ? t : lsGet("habito.todos", []));
+    setHabits(Array.isArray(h) ? h : lsGet("dailycycle.habits", []));
+    setTodos(Array.isArray(t) ? t : lsGet("dailycycle.todos", []));
 
     const map = {};
     for (const hb of fixedHabits) {
@@ -49,10 +49,10 @@ export default function useAppLogic() {
     }
     setCompletions(map);
 
-    lsSet("habito.groups", allGroups);
-    lsSet("habito.habits", fixedHabits);
-    lsSet("habito.todos", t || []);
-    lsSet("habito.completions", map);
+    lsSet("dailycycle.groups", allGroups);
+    lsSet("dailycycle.habits", fixedHabits);
+    lsSet("dailycycle.todos", t || []);
+    lsSet("dailycycle.completions", map);
   };
 
   useEffect(() => {
@@ -84,7 +84,7 @@ export default function useAppLogic() {
       const by = { ...(copy[habitId] || {}) };
       by[iso] = (by[iso] || 0) + 1;
       copy[habitId] = by;
-      lsSet("habito.completions", copy);
+      lsSet("dailycycle.completions", copy);
       return copy;
     });
     await api(`?type=habit_progress&habit_id=${habitId}`, {
@@ -104,7 +104,7 @@ export default function useAppLogic() {
       const by = { ...(copy[habit.id] || {}) };
       delete by[iso];
       copy[habit.id] = by;
-      lsSet("habito.completions", copy);
+      lsSet("dailycycle.completions", copy);
       return copy;
     });
   };
@@ -114,13 +114,13 @@ export default function useAppLogic() {
       await api(`id=${habit.id}`, { method: "DELETE" });
       setHabits((prev) => {
         const updated = prev.filter((h) => h.id !== habit.id);
-        lsSet("habito.habits", updated);
+        lsSet("dailycycle.habits", updated);
         return updated;
       });
       setCompletions((prev) => {
         const copy = { ...prev };
         delete copy[habit.id];
-        lsSet("habito.completions", copy);
+        lsSet("dailycycle.completions", copy);
         return copy;
       });
       toast.success(`"${habit.name}" gelöscht`);
@@ -138,7 +138,7 @@ export default function useAppLogic() {
       });
       setHabits((hs) => {
         const arr = hs.map((h) => (h.id === payload.id ? { ...h, ...payload } : h));
-        lsSet("habito.habits", arr);
+        lsSet("dailycycle.habits", arr);
         return arr;
       });
       toast.success(`"${payload.name}" aktualisiert`);
@@ -152,7 +152,7 @@ export default function useAppLogic() {
       const item = { ...payload, id };
       setHabits((hs) => {
         const arr = [item, ...hs];
-        lsSet("habito.habits", arr);
+        lsSet("dailycycle.habits", arr);
         return arr;
       });
       toast.success(`"${payload.name}" hinzugefügt`);
@@ -168,7 +168,7 @@ export default function useAppLogic() {
     });
     setTodos((ts) => {
       const arr = ts.map((t) => (t.id === todo.id ? upd : t));
-      lsSet("habito.todos", arr);
+      lsSet("dailycycle.todos", arr);
       return arr;
     });
   };
@@ -184,7 +184,7 @@ export default function useAppLogic() {
         const arr = ts.map((t) =>
           t.id === payload.id ? { ...t, ...payload } : t
         );
-        lsSet("habito.todos", arr);
+        lsSet("dailycycle.todos", arr);
         return arr;
       });
     } else {
@@ -197,7 +197,7 @@ export default function useAppLogic() {
       const item = { id, ...payload, done: false };
       setTodos((ts) => {
         const arr = [item, ...ts];
-        lsSet("habito.todos", arr);
+        lsSet("dailycycle.todos", arr);
         return arr;
       });
     }

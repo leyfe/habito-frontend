@@ -37,7 +37,7 @@ export const lsSet = (key, val) => {
 // =======================================================
 // ✅ STRATO-kompatibler API-Wrapper (mit Query-Fix + CORS-freundlich)
 // =======================================================
-export const API_URL = "http://52071041.swh.strato-hosting.eu/habito/habito-api.php";
+export const API_URL = import.meta.env.VITE_API_URL;
 
 export async function api(path = "", options = {}) {
   // Falls path kein ? enthält → automatisch hinzufügen

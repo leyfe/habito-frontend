@@ -13,6 +13,16 @@ body {
   padding-bottom: env(safe-area-inset-bottom);
 }
 
+#bg-wrap {
+  filter: blur(40px) brightness(0.9) saturate(0);
+  opacity: 0.6;
+}
+
+/*HABIT CARD*/
+.linked {
+  left: 12px;
+  width: calc(100% - 24px);
+}
 
 @keyframes shake {
   0% { transform: translate(0, 0) rotate(0deg); }

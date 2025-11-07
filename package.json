@@ -1,6 +1,6 @@
 {
-  "name": "habito-frontend",
-  "version": "1.0.0",
+  "name": "dailycycle-frontend",
+  "version": "1.1.1",
   "private": true,
   "type": "module",
   "scripts": {
